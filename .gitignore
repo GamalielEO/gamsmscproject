@@ -1,21 +1,44 @@
+# Dependencies
 node_modules/
-.venv/
-uploads/
-tmp/
-dist/
-build/
-coverage/
-.env
-.env.*
-*.log
-*.tmp
-*.cache
 __pycache__/
-*.pyc
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Environment variables
+.env
+.env.local
+
+# OS files
 .DS_Store
 Thumbs.db
-.vscode/
-.idea/
-*.orig
-face_model.yml
+
+# Face Recognition Data
+uploads/
+tmp/
 *.yml
+*.yaml
+*.pkl
+*.pth
+*.h5
+*.hdf5
+*.pt
+*.model
+*.weights
+*.npy
+*.npz
+*.data
+*.index
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+models/
+*.yml
+*.yaml
+*.pkl
+*.h5
+*.pt
