@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .admin-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 2rem;
+      margin-top: 2rem;
+      flex-wrap: wrap;
+    }
+    .admin-card {
+      flex: 1;
+      min-width: 300px;
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .admin-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+    }
+    .admin-card h3 {
+      color: #2c3e50;
+      margin-bottom: 1rem;
+      font-size: 1.4rem;
+    }
+    .admin-card p {
+      color: #7f8c8d;
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+    }
+    .admin-btn {
+      display: inline-block;
+      padding: 0.9rem 2rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      font-weight: 600;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    .admin-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    .admin-btn.surveillance {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    .admin-btn.surveillance:hover {
+      box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+    }
+    .icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+    .welcome-section {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .welcome-section h2 {
+      color: #2c3e50;
+      font-size: 2rem;
+    }
+    .welcome-section p {
+      color: #7f8c8d;
+      font-size: 1.1rem;
+    }
+    .logout-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      padding: 0.6rem 1.2rem;
+      background-color: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+      font-weight: 600;
+      transition: background-color 0.3s ease;
+    }
+    .logout-btn:hover {
+      background-color: #c0392b;
+    }
+  </style>
+</head>
+<body>
+  <a href="/logout" class="logout-btn">Logout</a>
+  
+  <main>
+    <div class="welcome-section">
+      <h2>Welcome to Admin Dashboard</h2>
+      <p>Manage face registration and live surveillance</p>
+    </div>
+
+    <div class="admin-container">
+      <!-- Registration Card -->
+      <div class="admin-card">
+        <div class="icon">📋</div>
+        <h3>Face Registration</h3>
+        <p>Register new faces to the system. Upload multiple images of a person for accurate facial recognition.</p>
+        <a href="/registration" class="admin-btn">Register</a>
+      </div>
+
+      <!-- Surveillance Card -->
+      <div class="admin-card">
+        <div class="icon">📹</div>
+        <h3>Live Surveillance</h3>
+        <p>Monitor live camera feeds and view real-time face recognition results.</p>
+        <a href="/surveillance" class="admin-btn surveillance">Surveillance</a>
+      </div>
+    </div>
+
+    <!-- System Status Section -->
+    <section style="margin-top: 3rem;">
+      <h2>System Status</h2>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
+        <div style="background: #e8f8f5; padding: 1.5rem; border-radius: 4px; border-left: 4px solid #27ae60;">
+          <h4 style="color: #27ae60; margin: 0 0 0.5rem 0;">Active Cameras</h4>
+          <p style="font-size: 1.5rem; color: #2c3e50; margin: 0;" id="active-cameras">0</p>
+        </div>
+        <div style="background: #fdeaa8; padding: 1.5rem; border-radius: 4px; border-left: 4px solid #f39c12;">
+          <h4 style="color: #f39c12; margin: 0 0 0.5rem 0;">Registered Faces</h4>
+          <p style="font-size: 1.5rem; color: #2c3e50; margin: 0;" id="registered-faces">0</p>
+        </div>
+        <div style="background: #d6eaf8; padding: 1.5rem; border-radius: 4px; border-left: 4px solid #3498db;">
+          <h4 style="color: #3498db; margin: 0 0 0.5rem 0;">Recent Detections</h4>
+          <p style="font-size: 1.5rem; color: #2c3e50; margin: 0;" id="recent-detections">0</p>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Manage Registrations -->
+    <section style="margin-top: 2rem;">
+      <h2>Manage Registrations</h2>
+      <div id="faces-list" style="margin-top:1rem;"></div>
+    </section>
+  </main>
+
+  <script src="/script.js"></script>
+  <script>
+    async function loadFaces() {
+      try {
+        const resp = await fetch('/api/faces', { credentials: 'same-origin' });
+        const data = await resp.json();
+        const container = document.getElementById('faces-list');
+        if (!container) return;
+        if (!Array.isArray(data) || data.length === 0) {
+          container.innerHTML = '<p style="color:#7f8c8d">No registrations found.</p>';
+          return;
+        }
+        container.innerHTML = data.map(item => `
+          <div style="display:flex;align-items:center;justify-content:space-between;border:1px solid #eee;border-radius:8px;padding:0.8rem;margin-bottom:0.5rem;background:#fafafa">
+            <div>
+              <div style="font-weight:600;color:#2c3e50">${item.name}</div>
+              <div style="font-size:0.9rem;color:#7f8c8d">Label ID: ${item.label_id} • Images: ${item.imagePaths?.length || 0}</div>
+              <div style="font-size:0.85rem;color:#95a5a6">${item.email || ''}</div>
+            </div>
+            <div>
+              <button onclick="unregister('${item.label_id}')" style="background:#e74c3c">Unregister</button>
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {
+        console.error('Load faces error:', e);
+      }
+    }
+    async function unregister(labelId) {
+      try {
+        const resp = await fetch('/api/unregister', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ label_id: Number(labelId) })
+        });
+        const data = await resp.json();
+        if (data && data.success) {
+          loadAdminStats();
+          await loadFaces();
+          alert('Unregistered successfully');
+        } else {
+          alert(data.message || 'Failed to unregister');
+        }
+      } catch (e) {
+        alert('Server error: ' + e.message);
+      }
+    }
+    loadFaces();
+  </script>
+</body>
+</html>

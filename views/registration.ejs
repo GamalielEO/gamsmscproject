@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .registration-container {
+      max-width: 1000px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    .registration-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .registration-header h2 {
+      color: #2c3e50;
+      margin-bottom: 0.5rem;
+    }
+
+    .registration-header p {
+      color: #7f8c8d;
+      font-size: 1.05rem;
+    }
+
+    .registration-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .camera-section,
+    .captured-section {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .camera-section h3,
+    .captured-section h3 {
+      color: #2c3e50;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    #video-feed {
+      width: 100%;
+      height: 350px;
+      background-color: #000;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .camera-controls {
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+
+    .btn-capture,
+    .btn-start,
+    .btn-stop,
+    .btn-clear,
+    .btn-submit {
+      padding: 0.8rem 1.5rem;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-capture {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      flex: 1;
+      min-width: 120px;
+    }
+
+    .btn-capture:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-capture:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-start {
+      background-color: #27ae60;
+      color: white;
+      flex: 1;
+      min-width: 100px;
+    }
+
+    .btn-start:hover {
+      background-color: #229954;
+    }
+
+    .btn-stop {
+      background-color: #e74c3c;
+      color: white;
+      flex: 1;
+      min-width: 100px;
+    }
+
+    .btn-stop:hover {
+      background-color: #c0392b;
+    }
+
+    .btn-stop:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-clear {
+      background-color: #95a5a6;
+      color: white;
+      flex: 1;
+      min-width: 100px;
+    }
+
+    .btn-clear:hover {
+      background-color: #7f8c8d;
+    }
+
+    #captured-images {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.8rem;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .captured-image {
+      position: relative;
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .captured-image img {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      margin: 0;
+      border: none;
+    }
+
+    .remove-image {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background-color: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 25px;
+      height: 25px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background-color 0.2s;
+    }
+
+    .remove-image:hover {
+      background-color: #c0392b;
+    }
+
+    .image-count {
+      text-align: center;
+      color: #7f8c8d;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+    }
+
+    .registration-form {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-group {
+      margin-bottom: 1.2rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      color: #2c3e50;
+      margin-bottom: 0.5rem;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 0.8rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 1rem;
+      font-family: inherit;
+      transition: border-color 0.3s ease;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .btn-submit {
+      width: 100%;
+      background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+      color: white;
+      padding: 1rem;
+      font-size: 1rem;
+    }
+
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(39, 174, 96, 0.4);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .status-message {
+      margin-top: 1rem;
+      padding: 1rem;
+      border-radius: 4px;
+      display: none;
+    }
+
+    .status-message.success {
+      background-color: #d5f4e6;
+      color: #27ae60;
+    }
+
+    .status-message.error {
+      background-color: #fadbd8;
+      color: #e74c3c;
+    }
+
+    .status-message.info {
+      background-color: #d6eaf8;
+      color: #3498db;
+    }
+
+    @media (max-width: 768px) {
+      .registration-content {
+        grid-template-columns: 1fr;
+      }
+
+      #captured-images {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .camera-controls {
+        flex-direction: column;
+      }
+
+      .btn-capture,
+      .btn-start,
+      .btn-stop,
+      .btn-clear {
+        min-width: unset;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a href="/logout" class="logout-btn">Logout</a>
+
+  <div class="registration-container">
+    <div class="registration-header">
+      <h2>Face Registration</h2>
+      <p>Capture multiple photos using your camera for accurate facial recognition</p>
+    </div>
+
+    <div class="registration-content">
+      <!-- Camera Feed Section -->
+      <div class="camera-section">
+        <h3>📷 Live Camera Feed</h3>
+        <video id="video-feed" autoplay playsinline></video>
+        
+        <div class="camera-controls">
+          <button id="btn-start-camera" class="btn-start">Start Camera</button>
+          <button id="btn-stop-camera" class="btn-stop" disabled>Stop Camera</button>
+        </div>
+        
+        <button id="btn-capture-photo" class="btn-capture" disabled>Capture Photo</button>
+      </div>
+
+      <!-- Captured Images Section -->
+      <div class="captured-section">
+        <h3>📸 Captured Photos</h3>
+        <div id="captured-images"></div>
+        <div class="image-count">
+          <span id="image-count">0</span> photos captured
+        </div>
+        <button id="btn-clear-images" class="btn-clear" style="width: 100%; margin-top: 1rem;">Clear All</button>
+      </div>
+    </div>
+
+    <!-- Registration Form -->
+    <form id="registration-form" class="registration-form">
+      <h3 style="color: #2c3e50; margin-bottom: 1.5rem;">Complete Registration</h3>
+      
+      <div class="form-group">
+        <label for="name">Full Name *</label>
+        <input type="text" id="name" name="name" placeholder="Enter full name" required>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email Address *</label>
+        <input type="email" id="email" name="email" placeholder="Enter email address" required>
+      </div>
+
+      <div class="form-group">
+        <label for="phone">Phone Number</label>
+        <input type="tel" id="phone" name="phone" placeholder="Enter phone number (optional)">
+      </div>
+
+      <button type="submit" class="btn-submit" id="btn-register">Register Face</button>
+      
+      <div id="registration-status" class="status-message"></div>
+    </form>
+  </div>
+
+  <script>
+    // Camera and image capture variables
+    let stream = null;
+    const videoFeed = document.getElementById('video-feed');
+    const btnStartCamera = document.getElementById('btn-start-camera');
+    const btnStopCamera = document.getElementById('btn-stop-camera');
+    const btnCapturePhoto = document.getElementById('btn-capture-photo');
+    const btnClearImages = document.getElementById('btn-clear-images');
+    const capturedImagesContainer = document.getElementById('captured-images');
+    const imageCountDisplay = document.getElementById('image-count');
+    const registrationForm = document.getElementById('registration-form');
+    const btnRegister = document.getElementById('btn-register');
+    const statusMessage = document.getElementById('registration-status');
+
+    let capturedImages = [];
+
+    // Start camera
+    btnStartCamera.addEventListener('click', async () => {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: false
+        });
+        videoFeed.srcObject = stream;
+        btnStartCamera.disabled = true;
+        btnStopCamera.disabled = false;
+        btnCapturePhoto.disabled = false;
+      } catch (err) {
+        showStatus('Error accessing camera: ' + err.message, 'error');
+        console.error('Camera error:', err);
+      }
+    });
+
+    // Stop camera
+    btnStopCamera.addEventListener('click', () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+      videoFeed.srcObject = null;
+      btnStartCamera.disabled = false;
+      btnStopCamera.disabled = true;
+      btnCapturePhoto.disabled = true;
+    });
+
+    async function isAligned() { return true; }
+
+    async function autoCaptureSix() {
+      btnCapturePhoto.disabled = true;
+      let captured = 0;
+      const start = Date.now();
+      while (captured < 6 && Date.now() - start < 15000) {
+        const canvas = document.createElement('canvas');
+        const targetW = 320;
+        const scale = videoFeed.videoWidth > 0 ? targetW / videoFeed.videoWidth : 1;
+        canvas.width = targetW;
+        canvas.height = Math.round(videoFeed.videoHeight * scale);
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(videoFeed, 0, 0, canvas.width, canvas.height);
+        const imageData = canvas.toDataURL('image/png');
+        capturedImages.push(imageData);
+        captured++;
+        renderCapturedImages();
+        showStatus(`Captured ${captured}/6`, 'info');
+        await new Promise(r => setTimeout(r, 200));
+      }
+      btnCapturePhoto.disabled = false;
+      if (captured < 6) {
+        showStatus(`Captured ${captured}/6. Try again for full set.`, 'error');
+      } else {
+        showStatus('Captured 6 photos successfully', 'success');
+      }
+    }
+
+    btnCapturePhoto.addEventListener('click', () => {
+      autoCaptureSix();
+    });
+
+    // Render captured images
+    function renderCapturedImages() {
+      capturedImagesContainer.innerHTML = '';
+      capturedImages.forEach((image, index) => {
+        const div = document.createElement('div');
+        div.className = 'captured-image';
+        div.innerHTML = `
+          <img src="${image}" alt="Captured photo ${index + 1}">
+          <button type="button" class="remove-image" onclick="removeImage(${index})">×</button>
+        `;
+        capturedImagesContainer.appendChild(div);
+      });
+      imageCountDisplay.textContent = capturedImages.length;
+      btnRegister.disabled = capturedImages.length === 0;
+    }
+
+    // Remove image
+    window.removeImage = function(index) {
+      capturedImages.splice(index, 1);
+      renderCapturedImages();
+      showStatus('Photo removed', 'info');
+    };
+
+    // Clear all images
+    btnClearImages.addEventListener('click', () => {
+      if (capturedImages.length > 0) {
+        capturedImages = [];
+        renderCapturedImages();
+        showStatus('All photos cleared', 'info');
+      }
+    });
+
+    // Handle form submission
+    // registrationForm.addEventListener('submit', async (e) => {
+    //   e.preventDefault();
+
+    //   const name = document.getElementById('name').value.trim();
+    //   const email = document.getElementById('email').value.trim();
+    //   const phone = document.getElementById('phone').value.trim();
+
+    //   // Validation
+    //   if (!name || !email) {
+    //     showStatus('Please fill in all required fields', 'error');
+    //     return;
+    //   }
+
+    //   if (capturedImages.length === 0) {
+    //     showStatus('Please capture at least one photo', 'error');
+    //     return;
+    //   }
+
+    //   if (capturedImages.length < 3) {
+    //     showStatus('We recommend at least 3 photos for better accuracy', 'info');
+    //   }
+
+    //   // Disable submit button
+    //   btnRegister.disabled = true;
+    //   btnRegister.textContent = 'Registering...';
+
+    //   try {
+    //     const payload = {
+    //       name: name,
+    //       email: email,
+    //       phone: phone,
+    //       images: capturedImages
+    //     };
+
+    //     const response = await fetch('/api/register-face', {
+    //       method: 'POST',
+    //       headers: {
+    //         'Content-Type': 'application/json'
+    //       },
+    //       body: JSON.stringify(payload)
+    //     });
+
+    //     const data = await response.json();
+
+    //     if (response.ok) {
+    //       showStatus('Face registered successfully!', 'success');
+    //       registrationForm.reset();
+    //       capturedImages = [];
+    //       renderCapturedImages();
+    //       btnRegister.textContent = 'Register Face';
+          
+    //       setTimeout(() => {
+    //         window.location.href = '/admin';
+    //       }, 2000);
+    //     } else {
+    //       showStatus(data.message || 'Registration failed', 'error');
+    //       btnRegister.disabled = false;
+    //       btnRegister.textContent = 'Register Face';
+    //     }
+    //   } catch (err) {
+    //     showStatus('Error: ' + err.message, 'error');
+    //     btnRegister.disabled = false;
+    //     btnRegister.textContent = 'Register Face';
+    //   }
+    // });
+
+    // Show status message
+    
+registrationForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const name = document.getElementById('name').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+
+    if (capturedImages.length === 0) {
+        showStatus('Please capture at least one photo', 'error');
+        return;
+    }
+
+    btnRegister.disabled = true;
+    btnRegister.textContent = 'Registering...';
+
+    try {
+        // Create FormData instead of a JSON object
+        const formData = new FormData();
+        formData.append('name', name);
+        formData.append('email', email);
+        formData.append('phone', phone);
+
+        // Convert Base64 strings to actual File objects for Multer
+        for (let i = 0; i < capturedImages.length; i++) {
+            const response = await fetch(capturedImages[i]);
+            const blob = await response.blob();
+            formData.append('images', blob, `face_${i}.png`);
+        }
+
+        async function sendWithRetry(fd, attempts = 3) {
+            for (let i = 0; i < attempts; i++) {
+                try {
+                    const resp = await fetch('/api/register-face', {
+                        method: 'POST',
+                        body: fd,
+                        credentials: 'same-origin'
+                    });
+                    const ct = resp.headers.get('content-type') || '';
+                    if (!ct.includes('application/json')) {
+                        if (!resp.ok) {
+                            throw new Error('status:' + resp.status);
+                        } else {
+                            throw new Error('non-json');
+                        }
+                    }
+                    const json = await resp.json();
+                    return json;
+                } catch (e) {
+                    await new Promise(r => setTimeout(r, 500 * (i + 1)));
+                    if (i === attempts - 1) throw e;
+                }
+            }
+        }
+        const data = await sendWithRetry(formData, 3);
+        if (data && data.success) {
+            showStatus('Face registered successfully!', 'success');
+            registrationForm.reset();
+            capturedImages = [];
+            renderCapturedImages();
+            btnRegister.textContent = 'Register Face';
+            setTimeout(() => {
+                window.location.href = '/admin';
+            }, 1500);
+        } else {
+            showStatus((data && data.message) ? data.message : 'Registration failed', 'error');
+            btnRegister.disabled = false;
+            btnRegister.textContent = 'Register Face';
+        }
+    } catch (err) {
+        const msg = (err && err.message) ? err.message : '';
+        if (msg.startsWith('status:')) {
+            const code = msg.split(':')[1];
+            showStatus(`Server error: ${code}`, 'error');
+        } else if (msg === 'non-json') {
+            showStatus('Server returned non-JSON response', 'error');
+        } else {
+            showStatus('Server unreachable', 'error');
+        }
+        btnRegister.disabled = false;
+        btnRegister.textContent = 'Register Face';
+    }
+});
+
+    function showStatus(message, type) {
+      statusMessage.textContent = message;
+      statusMessage.className = `status-message ${type}`;
+      statusMessage.style.display = 'block';
+      
+      if (type !== 'error') {
+        setTimeout(() => {
+          statusMessage.style.display = 'none';
+        }, 4000);
+      }
+    }
+
+    // Initial state
+    renderCapturedImages();
+  </script>
+
+  <script src="/script.js"></script>
+</body>
+</html>

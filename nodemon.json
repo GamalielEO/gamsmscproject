@@ -1,0 +1,17 @@
+{
+  "watch": [
+    "index.js",
+    "views/**/*.ejs",
+    "public/**/*.js",
+    "public/**/*.css",
+    "*.js"
+  ],
+  "ext": "js,json,ejs,css",
+  "ignore": [
+    "uploads/**",
+    "faces.json",
+    "label_map.json",
+    "label_map.tmp.json",
+    "embeddings.json"
+  ]
+}

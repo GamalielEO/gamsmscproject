@@ -1,0 +1,115 @@
+{
+  "auditReportVersion": 2,
+  "vulnerabilities": {
+    "@tensorflow/tfjs-core": {
+      "name": "@tensorflow/tfjs-core",
+      "severity": "low",
+      "isDirect": false,
+      "via": [
+        "node-fetch"
+      ],
+      "effects": [
+        "face-api.js"
+      ],
+      "range": "1.1.0 - 2.4.0",
+      "nodes": [
+        "node_modules/@tensorflow/tfjs-core"
+      ],
+      "fixAvailable": {
+        "name": "face-api.js",
+        "version": "0.20.0",
+        "isSemVerMajor": true
+      }
+    },
+    "face-api.js": {
+      "name": "face-api.js",
+      "severity": "low",
+      "isDirect": true,
+      "via": [
+        "@tensorflow/tfjs-core"
+      ],
+      "effects": [],
+      "range": ">=0.20.1",
+      "nodes": [
+        "node_modules/face-api.js"
+      ],
+      "fixAvailable": {
+        "name": "face-api.js",
+        "version": "0.20.0",
+        "isSemVerMajor": true
+      }
+    },
+    "node-fetch": {
+      "name": "node-fetch",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        {
+          "source": 1095073,
+          "name": "node-fetch",
+          "dependency": "node-fetch",
+          "title": "node-fetch forwards secure headers to untrusted sites",
+          "url": "https://github.com/advisories/GHSA-r683-j2x4-v87g",
+          "severity": "high",
+          "cwe": [
+            "CWE-173",
+            "CWE-200",
+            "CWE-601"
+          ],
+          "cvss": {
+            "score": 8.8,
+            "vectorString": "CVSS:3.0/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+          },
+          "range": "<2.6.7"
+        },
+        {
+          "source": 1098225,
+          "name": "node-fetch",
+          "dependency": "node-fetch",
+          "title": "The `size` option isn't honored after following a redirect in node-fetch",
+          "url": "https://github.com/advisories/GHSA-w7rc-rwvf-8q5r",
+          "severity": "low",
+          "cwe": [
+            "CWE-20",
+            "CWE-770"
+          ],
+          "cvss": {
+            "score": 2.6,
+            "vectorString": "CVSS:3.1/AV:N/AC:H/PR:L/UI:R/S:U/C:N/I:N/A:L"
+          },
+          "range": ">=2.0.0 <2.6.1"
+        }
+      ],
+      "effects": [
+        "@tensorflow/tfjs-core"
+      ],
+      "range": "<=2.6.6",
+      "nodes": [
+        "node_modules/node-fetch"
+      ],
+      "fixAvailable": {
+        "name": "face-api.js",
+        "version": "0.20.0",
+        "isSemVerMajor": true
+      }
+    }
+  },
+  "metadata": {
+    "vulnerabilities": {
+      "info": 0,
+      "low": 2,
+      "moderate": 0,
+      "high": 1,
+      "critical": 0,
+      "total": 3
+    },
+    "dependencies": {
+      "prod": 153,
+      "dev": 0,
+      "optional": 1,
+      "peer": 1,
+      "peerOptional": 0,
+      "total": 154
+    }
+  }
+}

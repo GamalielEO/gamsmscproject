@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/style.css">
+
+  <style>
+    .surveillance-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 2rem;
+    }
+    .video-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+    #video-feed {
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    #canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    .status-panel {
+      margin-top: 1rem;
+      padding: 1rem;
+      background: #f8f9fa;
+      border-radius: 8px;
+      width: 100%;
+      max-width: 720px;
+    }
+  </style>
+</head>
+<body>
+  <%- include('partials/nav') %>
+  <main>
+    <div class="surveillance-grid">
+      <div class="panel">
+        <h2>Live Surveillance</h2>
+        <div class="video-wrapper">
+          <video id="video-feed" width="720" height="560" autoplay muted playsinline></video>
+          <canvas id="canvas"></canvas>
+        </div>
+        <div class="toolbar">
+          <button id="btn-start" class="btn-start">Start</button>
+          <button id="btn-stop" class="btn-stop" disabled>Stop</button>
+          <button id="btn-stream-start" class="btn-start">Start DeepFace Stream</button>
+          <button id="btn-stream-stop" class="btn-stop" disabled>Stop Stream</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>System Status</h3>
+        <p id="status-text">Initializing...</p>
+        <div style="margin-top:0.5rem">
+          <span class="badge badge-green">Known</span>
+          <span class="badge badge-red">Unknown</span>
+        </div>
+        <h3 style="margin-top:1rem">Detections</h3>
+        <div id="det-list" class="det-list"></div>
+      </div>
+    </div>
+  </main>
+  <%- include('partials/footer') %>
+
+  <script>
+    const video = document.getElementById('video-feed');
+    const canvas = document.getElementById('canvas');
+    const statusText = document.getElementById('status-text');
+    const ctx = canvas.getContext('2d');
+    const btnStart = document.getElementById('btn-start');
+    const btnStop = document.getElementById('btn-stop');
+    const btnStreamStart = document.getElementById('btn-stream-start');
+    const btnStreamStop = document.getElementById('btn-stream-stop');
+    const detList = document.getElementById('det-list');
+
+    let isProcessing = false;
+    let running = false;
+    let lastTick = performance.now();
+    let fps = 0;
+    const history = [];
+
+    async function startVideo() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+        video.srcObject = stream;
+        statusText.innerText = 'System Active. Monitoring via DeepFace embeddings...';
+      } catch (err) {
+        console.error(err);
+        statusText.innerText = 'Error accessing camera: ' + err.message;
+      }
+    }
+
+    btnStart.addEventListener('click', () => {
+      running = true;
+      btnStart.disabled = true;
+      btnStop.disabled = false;
+    });
+
+    btnStop.addEventListener('click', () => {
+      running = false;
+      btnStart.disabled = false;
+      btnStop.disabled = true;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      statusText.innerText = 'Paused';
+    });
+    
+    btnStreamStart.addEventListener('click', async () => {
+      try {
+        const resp = await fetch('/api/stream/start', { method: 'POST', credentials: 'same-origin' });
+        const data = await resp.json();
+        statusText.innerText = data.message || 'Starting stream...';
+        btnStreamStart.disabled = true;
+        btnStreamStop.disabled = false;
+      } catch (e) {
+        statusText.innerText = 'Failed to start stream';
+      }
+    });
+    
+    btnStreamStop.addEventListener('click', async () => {
+      try {
+        const resp = await fetch('/api/stream/stop', { method: 'POST', credentials: 'same-origin' });
+        const data = await resp.json();
+        statusText.innerText = data.message || 'Stopped stream';
+        btnStreamStart.disabled = false;
+        btnStreamStop.disabled = true;
+      } catch (e) {
+        statusText.innerText = 'Failed to stop stream';
+      }
+    });
+
+    function addDetection(name, percent) {
+      const now = new Date();
+      history.unshift({ name, percent, time: now.toLocaleTimeString() });
+      if (history.length > 10) history.pop();
+      detList.innerHTML = history.map(h => `
+        <div class="det-item">
+          <div class="det-name">${h.name}</div>
+          <div class="det-meta">${h.percent}% • ${h.time}</div>
+        </div>
+      `).join('');
+    }
+
+    video.addEventListener('play', () => {
+        canvas.width = video.width;
+        canvas.height = video.height;
+
+        setInterval(async () => {
+            if (!running || isProcessing) return;
+            isProcessing = true;
+
+            try {
+                const tempCanvas = document.createElement('canvas');
+                const targetW = 320;
+                const scale = video.videoWidth > 0 ? targetW / video.videoWidth : 1;
+                tempCanvas.width = targetW;
+                tempCanvas.height = Math.round(video.videoHeight * scale);
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCtx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
+                const processedW = tempCanvas.width;
+                const processedH = tempCanvas.height;
+
+                tempCanvas.toBlob(async (blob) => {
+                    if (!blob) {
+                        isProcessing = false;
+                        return;
+                    }
+
+                    const formData = new FormData();
+                    formData.append('image', blob, 'capture.jpg');
+
+                    try {
+                        const response = await fetch('/api/recognize', {
+                            method: 'POST',
+                            body: formData,
+                            credentials: 'same-origin'
+                        });
+                        if (!response.ok) {
+                            statusText.innerText = `Server error: ${response.status}`;
+                            isProcessing = false;
+                            return;
+                        }
+                        const ct = response.headers.get('content-type') || '';
+                        if (!ct.includes('application/json')) {
+                            statusText.innerText = 'Server returned non-JSON response';
+                            isProcessing = false;
+                            return;
+                        }
+                        const data = await response.json();
+
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                        if (data.success && data.box) {
+                            const scaleX = canvas.width / processedW;
+                            const scaleY = canvas.height / processedH;
+
+                            const x = data.box.x * scaleX;
+                            const y = data.box.y * scaleY;
+                            const w = data.box.w * scaleX;
+                            const h = data.box.h * scaleY;
+
+                            ctx.strokeStyle = data.unknown ? '#ff0000' : '#00ff00';
+                            ctx.lineWidth = 3;
+                            ctx.strokeRect(x, y, w, h);
+
+                            ctx.fillStyle = data.unknown ? '#ff0000' : '#00ff00';
+                            ctx.fillRect(x, y - 25, w, 25);
+                            
+                            ctx.fillStyle = '#000000';
+                            ctx.font = '16px Arial';
+                            const percent = Math.max(0, Math.min(100, Math.round(100 - data.confidence)));
+                            ctx.fillText(`${data.name} (${percent}%)`, x + 5, y - 7);
+                            
+                            statusText.innerText = data.unknown ? 'Detected: Unknown' : `Detected: ${data.name}`;
+                            addDetection(data.name, percent);
+                        } else {
+                            const now = performance.now();
+                            fps = Math.round(1000 / Math.max(1, now - lastTick));
+                            lastTick = now;
+                            statusText.innerText = `Monitoring • ~${fps} fps`;
+                        }
+                    } catch (err) {
+                        console.error('Recognition error:', err);
+                        statusText.innerText = 'Server unreachable';
+                    } finally {
+                        isProcessing = false;
+                    }
+                }, 'image/jpeg', 0.6);
+
+            } catch (err) {
+                console.error('Frame capture error:', err);
+                isProcessing = false;
+            }
+        }, 1000);
+    });
+
+    startVideo();
+  </script>
+</body>
+</html>
